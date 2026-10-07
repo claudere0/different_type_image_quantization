@@ -1,0 +1,36 @@
+name: CI Pipeline - Lint & Unit Tests
+
+on:
+  push:
+    branches: [ main, master, dev ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Lint with Flake8
+        run: |
+          # Останавливаем сборку при синтаксических ошибках или неопределённых именах
+          flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+          # Предупреждения по стилю (длина строки до 127 символов)
+          flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+
+      - name: Run Automated Unit Tests with Pytest
+        run: |
+          pytest tests/ -v
